@@ -3,9 +3,6 @@ import os.path
 from datetime import datetime as dt
 
 class Migrate:
-    query_curr_version = 'select version from _version order by id desc limit 1'
-    query_insert_version = 'insert into _version (version, datetime) values (%s, %s)'
-
     def __init__(self, conn, migration_dir):
         self.conn = conn
         self.migration_dir = migration_dir
@@ -51,13 +48,20 @@ class Migrate:
         scripts.sort()
         return scripts
 
+class MigratePostgres(Migrate):
+    query_curr_version = 'select version from _version order by version desc limit 1'
+    query_insert_version = 'insert into _version (version, datetime) values (%s, %s)'
+
+    def __init__(self, conn, migration_dir):
+        Migrate.__init__(self, conn, migration_dir)
+
 if __name__ == '__main__':
     import psycopg2
     from sys import argv
 
     conn = psycopg2.connect(host=argv[1], database=argv[2], user=argv[3], password=argv[4])
     try:
-        m = Migrate(conn, argv[5])
+        m = MigratePostgres(conn, argv[5])
         m.migrate(argv[6])
     finally:
         conn.close()
