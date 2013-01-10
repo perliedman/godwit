@@ -1,5 +1,4 @@
 create table _version (
-    id serial,
-    version varchar(64),
+    version varchar(64) primary key,
     datetime timestamp
 )
