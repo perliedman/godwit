@@ -3,9 +3,10 @@ import os.path
 from datetime import datetime as dt
 
 class Migrate:
-    def __init__(self, conn, migration_dir):
+    def __init__(self, conn, migration_dir, commit=True):
         self.conn = conn
         self.migration_dir = migration_dir
+        self.commit = commit
 
     def get_current_version(self):
         cur = self.conn.cursor()
@@ -33,7 +34,11 @@ class Migrate:
                         print "Migration failed in script %s"
                         raise
 
-            conn.commit()
+            if self.commit:
+                conn.commit()
+            else:
+                conn.rollback()
+                print "Migration was rolled back since running in dry-run mode."
         finally:
             cur.close()
 
@@ -52,16 +57,28 @@ class MigratePostgres(Migrate):
     query_curr_version = 'select version from _version order by version desc limit 1'
     query_insert_version = 'insert into _version (version, datetime) values (%s, %s)'
 
-    def __init__(self, conn, migration_dir):
-        Migrate.__init__(self, conn, migration_dir)
+    def __init__(self, conn, migration_dir, commit):
+        Migrate.__init__(self, conn, migration_dir, commit)
 
 if __name__ == '__main__':
     import psycopg2
     from sys import argv
+    import argparse
 
-    conn = psycopg2.connect(host=argv[1], database=argv[2], user=argv[3], password=argv[4])
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--dry-run', action='store_true', help='If set, will rollback any migrations after they complete.')
+    parser.add_argument('host')
+    parser.add_argument('database')
+    parser.add_argument('user')
+    parser.add_argument('password')
+    parser.add_argument('migrationdir')
+    parser.add_argument('version')
+
+    args = parser.parse_args(argv[1:len(argv)])
+
+    conn = psycopg2.connect(host=args.host, database=args.database, user=args.user, password=args.password)
     try:
-        m = MigratePostgres(conn, argv[5])
-        m.migrate(argv[6])
+        m = MigratePostgres(conn, args.migrationdir, commit=not args.dry_run)
+        m.migrate(args.version)
     finally:
         conn.close()
