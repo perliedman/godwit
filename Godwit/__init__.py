@@ -1,6 +1,7 @@
 from os import listdir
 import os.path
 from datetime import datetime as dt
+import argparse
 
 class Migrate:
     def __init__(self, conn, migration_dir, commit=True):
@@ -60,11 +61,7 @@ class MigratePostgres(Migrate):
     def __init__(self, conn, migration_dir, commit):
         Migrate.__init__(self, conn, migration_dir, commit)
 
-if __name__ == '__main__':
-    import psycopg2
-    from sys import argv
-    import argparse
-
+def main(argv):
     parser = argparse.ArgumentParser()
     parser.add_argument('--dry-run', action='store_true', help='If set, will rollback any migrations after they complete.')
     parser.add_argument('host')
@@ -82,3 +79,9 @@ if __name__ == '__main__':
         m.migrate(args.version)
     finally:
         conn.close()
+
+if __name__ == '__main__':
+    import psycopg2
+    from sys import argv
+
+    main(argv)
