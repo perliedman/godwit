@@ -7,6 +7,15 @@ Currently, it support [PostgreSQL](http://www.postgresql.org/),
 using [psycopg2](http://initd.org/psycopg/). It should be a very small job
 to get it to work with another database.
 
+Installing
+----------
+
+Godwit uses distutils for installation and setup. To install, run this:
+
+```shell
+python setup.py install
+```
+
 Usage
 -----
 
@@ -19,7 +28,7 @@ lexicographic order.
 Migration can then be run from the command line:
 
 ```shell
-python migrate.py [host] [database] [username] [password] [script-dir] [version]
+python -m Godwit [host] [database] [username] [password] [script-dir] [version]
 ```
 
 This will connect to the provided ```host``` and ```database```, and migrate
