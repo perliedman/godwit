@@ -22,7 +22,7 @@ class Migrate:
         finally:
             cur.close()
 
-    def migrate(self, to_version):
+    def migrate(self, to_version=None):
         cur = self.conn.cursor()
         try:
             for migration_script in self._get_migration_scripts(self.get_current_version(), to_version):
@@ -68,7 +68,7 @@ def main(argv):
     parser.add_argument('user')
     parser.add_argument('password')
     parser.add_argument('migrationdir')
-    parser.add_argument('version')
+    parser.add_argument('--version', default=None)
 
     args = parser.parse_args(argv[1:len(argv)])
 
