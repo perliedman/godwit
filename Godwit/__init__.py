@@ -2,6 +2,7 @@ from os import listdir
 import os.path
 from datetime import datetime as dt
 import argparse
+import psycopg2
 
 class Migrate:
     def __init__(self, conn, migration_dir, commit=True):
@@ -16,7 +17,7 @@ class Migrate:
                 cur.execute(self.query_curr_version)
                 return cur.fetchone()[0]
             except:
-                conn.rollback()
+                self.conn.rollback()
                 return None
         finally:
             cur.close()
@@ -30,26 +31,24 @@ class Migrate:
                         print "Migrating to %s" % migration_script
                         cur.execute(script_file.read())
                         cur.execute(self.query_insert_version, (os.path.splitext(migration_script)[0], dt.now()))
-                    except Exception, e:
-                        conn.rollback()
+                    except Exception:
+                        self.conn.rollback()
                         print "Migration failed in script %s"
                         raise
 
             if self.commit:
-                conn.commit()
+                self.conn.commit()
             else:
-                conn.rollback()
+                self.conn.rollback()
                 print "Migration was rolled back since running in dry-run mode."
         finally:
             cur.close()
 
-    def _get_migration_scripts(self, from_version, to_version):
-        if from_version != None:
-            scripts = [x for x in listdir(self.migration_dir)
-                if x.endswith('.sql') and (x > ("%s.sql" % from_version) and x <= ("%s.sql" % to_version))]
-        else:
-            scripts = [x for x in listdir(self.migration_dir)
-                if x.endswith('.sql') and x <= ("%s.sql" % to_version)]
+    def _get_migration_scripts(self, from_version=None, to_version=None):
+        scripts = [x for x in listdir(self.migration_dir)
+            if x.endswith('.sql') and
+            (from_version is None or x > ("%s.sql" % from_version)) and
+            (to_version is None or x <= ("%s.sql" % to_version))]
 
         scripts.sort()
         return scripts
