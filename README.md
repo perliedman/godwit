@@ -10,7 +10,13 @@ to get it to work with another database.
 Installing
 ----------
 
-Godwit uses distutils for installation and setup. To install, run this:
+You can install Godwit using pip:
+
+```shell
+pip install godwit
+```
+
+To install from source, Godwit uses distutils, run this:
 
 ```shell
 python setup.py install
